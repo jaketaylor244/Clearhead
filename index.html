@@ -11,22 +11,30 @@ html, body { touch-action: pan-y; overscroll-behavior: none; }
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap');
 
 :root {
-  --bg: #0f0f11;
-  --surface: #18181c;
-  --surface2: #202026;
-  --border: #2e2e38;
-  --border2: #3a3a48;
-  --text: #eeeaf4;
-  --muted: #8a86a0;
-  --dim: #5a5670;
-  --accent: #a78bfa;
-  --accent2: #7c5ff5;
-  --green: #6ee7b7;
-  --warm: #fbbf7a;
-  --rose: #f9a8c9;
-  --blue: #7dd3fc;
-  --red: #f87171;
-  --glow: rgba(167,139,250,0.12);
+  /* Backgrounds — warm, soft, less contrast than old palette */
+  --bg: #131613;
+  --surface: #1a1e1a;
+  --surface2: #20251f;
+  --border: #2a302a;
+  --border2: #353c34;
+
+  /* Text — gentle off-white, no purple cast */
+  --text: #e6e8e2;
+  --muted: #8d958a;
+  --dim: #5c635a;
+
+  /* Single accent: sage green. Calm, low saturation. */
+  --accent: #9fd4ad;
+  --accent2: #8ac49a;
+  --accent-soft: rgba(159,212,173,0.12);
+
+  /* Functional colors kept but desaturated to the same family */
+  --green: #9fd4ad;
+  --warm: #b89a7a;
+  --rose: #b88e9a;
+  --blue: #8aa8b0;
+  --red: #c08080;
+  --glow: rgba(159,212,173,0.12);
 }
 
 body {
@@ -37,7 +45,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 36px 16px 80px;
+  padding: 32px 16px 80px;
 }
 
 .container {
@@ -45,7 +53,7 @@ body {
   max-width: 620px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 22px;
 }
 
 .wordmark {
@@ -104,7 +112,7 @@ body {
 .nav-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
 .nav-btn.gear { margin-left: auto; padding: 9px 12px; }
 
-.tab { display: none; flex-direction: column; gap: 16px; }
+.tab { display: none; flex-direction: column; gap: 20px; }
 .tab.active { display: flex; }
 
 /* MODE PILLS */
@@ -127,7 +135,7 @@ body {
   font-weight: 500;
 }
 .mode-btn.active {
-  background: #a78bfa14;
+  background: var(--accent-soft);
   border-color: var(--accent);
   color: var(--accent);
 }
@@ -174,7 +182,7 @@ textarea:focus {
   justify-content: center;
   gap: 8px;
 }
-.main-btn:hover { background: var(--accent); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(124,95,245,0.35); }
+.main-btn:hover { background: var(--accent); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(159,212,173,0.20); }
 .main-btn:active { transform: translateY(0); }
 .main-btn:disabled { background: var(--surface2); color: var(--dim); cursor: not-allowed; transform: none; box-shadow: none; }
 
@@ -245,8 +253,8 @@ textarea:focus {
 
 /* EXERCISE BLOCK */
 .exercise-block {
-  background: #a78bfa0a;
-  border: 1px solid #a78bfa28;
+  background: var(--accent-soft);
+  border: 1px solid rgba(159,212,173,0.22);
   border-radius: 12px;
   padding: 16px;
 }
@@ -340,8 +348,8 @@ textarea:focus {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--accent);
-  background: #a78bfa12;
-  border: 1px solid #a78bfa25;
+  background: var(--accent-soft);
+  border: 1px solid rgba(159,212,173,0.22);
   border-radius: 4px;
   padding: 2px 7px;
   font-weight: 600;
@@ -418,6 +426,51 @@ textarea:focus {
   letter-spacing: 0.1em;
   color: var(--dim);
   font-weight: 600;
+}
+
+/* SMALL "WHEN TO USE" HINT under tab headers */
+.tab-hint {
+  font-size: 0.78rem;
+  color: var(--dim);
+  letter-spacing: 0.01em;
+  margin-top: -4px;
+  margin-bottom: 2px;
+}
+
+/* OVERFLOW MENU for destructive actions */
+.overflow-wrap {
+  position: relative;
+  align-self: flex-start;
+}
+.overflow-trigger {
+  background: none;
+  border: none;
+  color: var(--dim);
+  font-size: 1.1rem;
+  padding: 6px 10px;
+  cursor: pointer;
+  border-radius: 6px;
+  letter-spacing: 0.15em;
+}
+.overflow-trigger:hover { color: var(--muted); background: var(--surface); }
+.overflow-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px;
+  z-index: 50;
+  min-width: 180px;
+}
+.overflow-menu.open { display: block; }
+.overflow-menu .danger-btn {
+  width: 100%;
+  align-self: stretch;
+  font-size: 0.78rem;
 }
 
 /* ============= GROUNDING TIMER MODAL ============= */
@@ -608,7 +661,7 @@ textarea:focus {
 .mood-emoji-btn:hover { border-color: var(--accent); }
 .mood-emoji-btn.selected {
   border-color: var(--accent);
-  background: #a78bfa18;
+  background: rgba(159,212,173,0.16);
   transform: scale(1.05);
 }
 .mood-emoji-label {
@@ -692,7 +745,7 @@ textarea:focus {
   transition: all 0.15s;
 }
 .tag-btn.selected {
-  background: #a78bfa18;
+  background: rgba(159,212,173,0.16);
   border-color: var(--accent);
   color: var(--accent);
 }
@@ -737,8 +790,8 @@ textarea:focus {
 
 /* PATTERNS */
 .pattern-card {
-  background: linear-gradient(135deg, #a78bfa10, #7c5ff508);
-  border: 1px solid #a78bfa28;
+  background: linear-gradient(135deg, rgba(159,212,173,0.12), rgba(138,196,154,0.08));
+  border: 1px solid rgba(159,212,173,0.22);
   border-radius: 12px;
   padding: 16px;
 }
@@ -830,8 +883,8 @@ textarea:focus {
 }
 
 .tc-summary {
-  background: linear-gradient(135deg, #a78bfa12, #7c5ff508);
-  border: 1px solid #a78bfa30;
+  background: linear-gradient(135deg, var(--accent-soft), rgba(138,196,154,0.08));
+  border: 1px solid rgba(159,212,173,0.24);
   border-radius: 12px;
   padding: 18px;
 }
@@ -891,11 +944,7 @@ textarea:focus {
 <div class="container">
 
   <div>
-    <div class="wordmark" onclick="resetApp()">
-      <div class="dot"></div>
-      Clearhead
-    </div>
-    <div class="wordmark-sub">CBT · DBT · You</div>
+    <div class="wordmark" onclick="resetApp()">Clearhead</div>
   </div>
 
   <div class="nav">
@@ -909,15 +958,13 @@ textarea:focus {
 
   <!-- =========== WORK IT OUT TAB =========== -->
   <div class="tab active" id="tab-work">
-    <div>
-      <div class="section-header" style="margin-bottom:10px">What's going on?</div>
-      <div class="mode-row">
-        <button class="mode-btn active" onclick="setMode('thought', this)">🌀 Intrusive / OCD thought</button>
-        <button class="mode-btn" onclick="setMode('anxiety', this)">⚡ Anxiety spiral</button>
-        <button class="mode-btn" onclick="setMode('emotion', this)">🌊 Big emotion</button>
-        <button class="mode-btn" onclick="setMode('negative', this)">🪤 Negative thought</button>
-        <button class="mode-btn" onclick="setMode('urge', this)">🔥 Compulsion urge</button>
-      </div>
+    <div class="tab-hint">When something's gripping you.</div>
+    <div class="mode-row">
+      <button class="mode-btn active" onclick="setMode('thought', this)">Intrusive thought</button>
+      <button class="mode-btn" onclick="setMode('anxiety', this)">Anxiety spiral</button>
+      <button class="mode-btn" onclick="setMode('emotion', this)">Big emotion</button>
+      <button class="mode-btn" onclick="setMode('negative', this)">Negative thought</button>
+      <button class="mode-btn" onclick="setMode('urge', this)">Compulsion urge</button>
     </div>
 
     <textarea id="thoughtInput" placeholder="Just put it out here — exactly as it's hitting you. No filter needed." oninput="autoExpand(this)"></textarea>
@@ -969,12 +1016,7 @@ textarea:focus {
 
   <!-- =========== CHALLENGE TAB =========== -->
   <div class="tab" id="tab-challenge">
-    <div>
-      <div class="section-header" style="margin-bottom:8px">Thought Record</div>
-      <div style="font-size:0.82rem;color:var(--muted);line-height:1.6">
-        Walk through a structured CBT worksheet to challenge a thought. We'll go step by step — situation, the thought, the distortion, the evidence, and a balanced reframe.
-      </div>
-    </div>
+    <div class="tab-hint">When one thought won't let go.</div>
 
     <div id="tcStart">
       <button class="main-btn" onclick="startThoughtChallenge()">
@@ -996,21 +1038,16 @@ textarea:focus {
 
   <!-- =========== GROUND TAB =========== -->
   <div class="tab" id="tab-ground">
-    <div>
-      <div class="section-header" style="margin-bottom:8px">Grounding & Regulation</div>
-      <div style="font-size:0.82rem;color:var(--muted);line-height:1.6">
-        Tell Clearhead what's happening and it picks the right technique — box breathing, 5-4-3-2-1 senses, TIPP, urge surfing. Or pick one yourself.
-      </div>
-    </div>
+    <div class="tab-hint">When your body needs to slow down.</div>
 
-    <textarea id="groundInput" placeholder="What's happening right now? (optional — leave blank to choose manually)" style="min-height:80px" oninput="autoExpand(this)"></textarea>
+    <textarea id="groundInput" placeholder="What's happening right now? (optional)" style="min-height:80px" oninput="autoExpand(this)"></textarea>
 
     <button class="main-btn" id="groundPickBtn" onclick="aiPickGrounding()">
       <div class="spinner" id="groundSpinner" style="display:none"></div>
       <span id="groundBtnText">Pick the right one for me</span>
     </button>
 
-    <div class="section-header" style="margin-top:8px">Or start one directly</div>
+    <div class="section-header" style="margin-top:8px">Or pick directly</div>
     <div class="mode-row">
       <button class="mode-btn" onclick="startGrounding('box', null)">🌬️ Box breathing</button>
       <button class="mode-btn" onclick="startGrounding('478', null)">😮‍💨 4-7-8 breathing</button>
@@ -1022,8 +1059,9 @@ textarea:focus {
 
   <!-- =========== JOURNAL TAB =========== -->
   <div class="tab" id="tab-journal">
+    <div class="tab-hint">Quick check-in.</div>
     <div>
-      <div class="section-header" style="margin-bottom:10px">How are you right now?</div>
+      <div class="section-header" style="margin-bottom:10px">How are you?</div>
       <div class="mood-emoji-row">
         <button class="mood-emoji-btn" data-mood="great" onclick="selectMood(this, 'great')">
           😊<span class="mood-emoji-label">Great</span>
@@ -1056,7 +1094,7 @@ textarea:focus {
     </div>
 
     <div>
-      <div class="section-header" style="margin-bottom:8px">What's tied to this? (optional)</div>
+      <div class="section-header" style="margin-bottom:8px">Tags <span style="text-transform:none;letter-spacing:0;color:var(--dim);font-weight:400">(optional)</span></div>
       <div class="tag-row" id="tagRow">
         <button class="tag-btn" onclick="toggleTag(this, 'work')">Work</button>
         <button class="tag-btn" onclick="toggleTag(this, 'relationship')">Relationship</button>
@@ -1113,7 +1151,12 @@ textarea:focus {
     <div class="history-list" id="historyList">
       <div class="empty-state">Nothing yet. Work through something and it'll show up here.</div>
     </div>
-    <button class="danger-btn" onclick="clearSessionHistory()">Clear history</button>
+    <div class="overflow-wrap">
+      <button class="overflow-trigger" onclick="toggleOverflow('historyOverflow', event)" aria-label="More options">···</button>
+      <div class="overflow-menu" id="historyOverflow">
+        <button class="danger-btn" onclick="clearSessionHistory()">Clear history</button>
+      </div>
+    </div>
   </div>
 
   <!-- =========== SETTINGS TAB =========== -->
@@ -1126,7 +1169,12 @@ textarea:focus {
     <div class="divider"></div>
     <div class="settings-section">
       <div class="settings-label">Data</div>
-      <button class="danger-btn" onclick="clearAllData()">Clear all data</button>
+      <div class="overflow-wrap">
+        <button class="overflow-trigger" onclick="toggleOverflow('dataOverflow', event)" aria-label="More options">···</button>
+        <div class="overflow-menu" id="dataOverflow">
+          <button class="danger-btn" onclick="clearAllData()">Clear all data</button>
+        </div>
+      </div>
     </div>
     <div class="divider"></div>
     <div class="settings-section">
@@ -1150,6 +1198,7 @@ textarea:focus {
 </div>
 
 <script>
+const MODEL = 'claude-sonnet-4-5-20250929';
 let mode = 'thought';
 let apiKey = '';
 let sessionHistory = [];
@@ -1178,7 +1227,11 @@ function saveApiKey() {
 }
 
 function clearAllData() {
-  if (!confirm('Clear ALL data — history, journal, settings? This cannot be undone.')) return;
+  const typed = prompt('This will permanently delete EVERYTHING — history, journal, API key. This cannot be undone.\n\nType DELETE to confirm:');
+  if (typed !== 'DELETE') {
+    if (typed !== null) alert('Cancelled — nothing was deleted.');
+    return;
+  }
   try {
     localStorage.removeItem('clearhead_history');
     localStorage.removeItem('clearhead_journal');
@@ -1186,6 +1239,7 @@ function clearAllData() {
   } catch(e) {}
   sessionHistory = []; journalEntries = []; apiKey = '';
   loadApiKey(); renderJournalEntries(); renderHistory();
+  closeAllOverflows();
   alert('All cleared.');
 }
 
@@ -1289,7 +1343,7 @@ grounding_type: pick the BEST guided exercise for them, or "null" if no guided e
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1200, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] })
+      body: JSON.stringify({ model: MODEL, max_tokens: 1200, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] })
     });
     if (!res.ok) { const err = await res.text(); throw new Error('API: ' + err.slice(0, 200)); }
     const data = await res.json();
@@ -1382,7 +1436,7 @@ Respond conversationally, 2-4 sentences. Give them a reframe, skill, or perspect
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 400, messages: [{ role: 'user', content: prompt }] })
+      body: JSON.stringify({ model: MODEL, max_tokens: 400, messages: [{ role: 'user', content: prompt }] })
     });
     const data = await res.json();
     const text = data.content?.[0]?.text || '';
@@ -1458,11 +1512,31 @@ function loadSessionHistory(i) {
 }
 
 function clearSessionHistory() {
-  if (!confirm('Clear all session history?')) return;
+  const typed = prompt('This will permanently delete all session history.\n\nType DELETE to confirm:');
+  if (typed !== 'DELETE') {
+    if (typed !== null) alert('Cancelled — nothing was deleted.');
+    return;
+  }
   sessionHistory = [];
   try { localStorage.removeItem('clearhead_history'); } catch(e) {}
   renderHistory();
+  closeAllOverflows();
 }
+
+function toggleOverflow(id, event) {
+  if (event) event.stopPropagation();
+  const menu = document.getElementById(id);
+  if (!menu) return;
+  const wasOpen = menu.classList.contains('open');
+  closeAllOverflows();
+  if (!wasOpen) menu.classList.add('open');
+}
+
+function closeAllOverflows() {
+  document.querySelectorAll('.overflow-menu.open').forEach(m => m.classList.remove('open'));
+}
+
+document.addEventListener('click', closeAllOverflows);
 
 function timeAgo(ts) {
   const m = Math.floor((Date.now() - ts) / 60000);
@@ -1625,7 +1699,7 @@ function renderPatterns() {
           ${topTags.map(([tag, count]) => `
             <div style="display:flex;justify-content:space-between;align-items:center">
               <span style="font-size:0.9rem;color:var(--text);text-transform:capitalize">${escapeHtml(tag)}</span>
-              <span style="font-size:0.78rem;color:var(--accent);background:#a78bfa12;border:1px solid #a78bfa25;border-radius:4px;padding:2px 8px;font-weight:600">${count} ${count === 1 ? 'time' : 'times'}</span>
+              <span style="font-size:0.78rem;color:var(--accent);background:var(--accent-soft);border:1px solid rgba(159,212,173,0.22);border-radius:4px;padding:2px 8px;font-weight:600">${count} ${count === 1 ? 'time' : 'times'}</span>
             </div>`).join('')}
         </div>
       </div>` : ''}
@@ -1666,7 +1740,7 @@ Respond as 2-3 short paragraphs. Warm, observational, NOT preachy. Don't say "I 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 600, messages: [{ role: 'user', content: prompt }] })
+      body: JSON.stringify({ model: MODEL, max_tokens: 600, messages: [{ role: 'user', content: prompt }] })
     });
     const data = await res.json();
     const text = data.content?.[0]?.text || '';
@@ -1719,7 +1793,7 @@ Respond ONLY with valid JSON:
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 200, messages: [{ role: 'user', content: prompt }] })
+      body: JSON.stringify({ model: MODEL, max_tokens: 200, messages: [{ role: 'user', content: prompt }] })
     });
     const data = await res.json();
     const raw = data.content?.[0]?.text || '';
@@ -2075,7 +2149,7 @@ Generate a balanced reframe and action step. Return ONLY valid JSON:
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 600, messages: [{ role: 'user', content: prompt }] })
+      body: JSON.stringify({ model: MODEL, max_tokens: 600, messages: [{ role: 'user', content: prompt }] })
     });
     const data = await res.json();
     const raw = data.content?.[0]?.text || '';
