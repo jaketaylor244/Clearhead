@@ -321,8 +321,49 @@ textarea:focus {
   cursor: pointer;
   transition: all 0.15s;
   font-weight: 500;
+  text-align: left;
+  line-height: 1.4;
 }
 .followup-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--glow); }
+
+/* Custom followup input */
+.custom-followup-wrap {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.custom-followup-input {
+  min-height: 60px;
+  font-size: 15px;
+  padding: 10px 12px;
+}
+.custom-followup-btn {
+  align-self: flex-end;
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.custom-followup-btn:hover { background: var(--accent-soft); }
+.custom-followup-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.custom-followup-btn .spinner {
+  width: 12px; height: 12px;
+  border: 2px solid var(--accent-soft);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: none;
+}
 
 .divider { height: 1px; background: var(--border); }
 
@@ -1005,6 +1046,13 @@ textarea:focus {
       <div id="followupSection" style="display:none">
         <div class="section-header" style="margin-bottom:8px">Go deeper</div>
         <div class="followup-row" id="followupRow"></div>
+        <div class="custom-followup-wrap">
+          <textarea id="customFollowupInput" class="custom-followup-input" placeholder="Or type your own — what's still stuck?" oninput="autoExpand(this)"></textarea>
+          <button class="custom-followup-btn" id="customFollowupBtn" onclick="doCustomFollowup()">
+            <div class="spinner" id="customFollowupSpinner"></div>
+            <span id="customFollowupBtnText">Work through it</span>
+          </button>
+        </div>
       </div>
 
       <div class="actions-row" style="margin-top:8px">
@@ -1312,7 +1360,7 @@ async function doAnalysis() {
 
   const systemPrompt = `You are Clearhead — a warm, grounded CBT and DBT companion. Not a therapist, but deeply trained in evidence-based techniques. You speak like a caring, knowledgeable friend who knows these tools really well.
 
-Tone: conversational, warm, honest. Never clinical or robotic. Never dismissive. Never fake-positive. Meet people where they are.
+Tone: warm, direct, honest. No filler, no hedging, no over-explaining. Cut throat-clearing phrases like "I hear you," "It sounds like," "What you're describing is" — get to the substance. Never clinical or robotic. Never fake-positive. One concrete thought per sentence.
 
 Helping with: ${guide.name}
 
@@ -1321,21 +1369,24 @@ ${guide.strategy}
 
 Return ONLY valid JSON:
 {
-  "validation": "1-2 sentences validating what they're experiencing. Warm and real.",
+  "validation": "ONE sentence. Acknowledge what's hard, specifically. No filler openers.",
   "insights": [
-    {"type": "distortion|reframe|skill|grounding|validation", "icon": "emoji", "title": "Short name (3-5 words)", "body": "1-2 friendly sentences."}
+    {"type": "distortion|reframe|skill|grounding|validation", "icon": "emoji", "title": "3-5 words", "body": "ONE sentence. Concrete, specific, no preamble."}
   ],
   "exercise": {
     "title": "${guide.exercise}",
-    "steps": ["step 1", "step 2", "step 3"],
+    "steps": ["short imperative step", "short imperative step", "short imperative step"],
     "grounding_type": "box|478|senses|urge|tipp|null"
   },
-  "reframe": "A realistic, grounded alternative perspective. 2-3 sentences max.",
-  "followups": ["short label 1", "short label 2", "short label 3"]
+  "reframe": "1-2 sentences max. Grounded alternative perspective, not toxic positivity.",
+  "followups": ["short label", "short label", "short label"]
 }
 
-Insights array: 2-4 items.
-grounding_type: pick the BEST guided exercise for them, or "null" if no guided exercise fits.`;
+Insights array: 2-3 items (not 4). Pick the most useful, skip the rest.
+Exercise steps: 3 short imperatives, each under 12 words.
+grounding_type: pick the BEST guided exercise, or "null" if none fits.
+
+Followups: 3 options for going deeper. AT LEAST ONE must be a real probing question that helps them work through what's hardest to let go — e.g. "What would it mean if this were true?", "What's the part you can't let go of?", "What are you afraid would happen?", "Where did you first learn this?". Phrase questions naturally, not like a worksheet. The other 1-2 can be topic labels ("the worst-case fear", "where this comes from"). Keep each under 9 words.`;
 
   const userPrompt = `Here's what I'm experiencing:\n\n"${input}"`;
 
@@ -1350,7 +1401,7 @@ grounding_type: pick the BEST guided exercise for them, or "null" if no guided e
     const raw = data.content?.[0]?.text || '';
     const clean = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
     const parsed = JSON.parse(clean);
-    lastAnalysis = { input, mode, parsed, ts: Date.now() };
+    lastAnalysis = { input, mode, parsed, ts: Date.now(), turns: [] };
     saveSessionHistoryEntry(input, mode, parsed.reframe || '');
     showOutput(parsed);
   } catch(err) {
@@ -1424,35 +1475,105 @@ async function doFollowup(btn) {
   const label = window._followups[parseInt(btn.dataset.idx)];
   if (!lastAnalysis || !apiKey) return;
   btn.disabled = true;
+  const originalLabel = btn.textContent;
   btn.textContent = '...';
 
-  const prompt = `You are Clearhead — warm CBT/DBT companion. User is following up.
-Original thought: "${lastAnalysis.input}"
-Mode: ${lastAnalysis.mode}
-They want to explore: "${label}"
-Respond conversationally, 2-4 sentences. Give them a reframe, skill, or perspective. Don't be clinical. Just speak directly.`;
-
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: MODEL, max_tokens: 400, messages: [{ role: 'user', content: prompt }] })
-    });
-    const data = await res.json();
-    const text = data.content?.[0]?.text || '';
-    const fuSection = document.getElementById('followupSection');
-    const newCard = document.createElement('div');
-    newCard.className = 'response-card';
-    newCard.innerHTML = `<div class="card-header"><span class="card-icon">💬</span><span class="card-label">${label}</span></div><div class="card-body">${text}</div>`;
-    fuSection.parentNode.insertBefore(newCard, fuSection);
-    newCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    btn.textContent = '✓ ' + label;
-    btn.style.color = 'var(--green)';
-    btn.style.borderColor = 'var(--green)';
+    const text = await runFollowupCall(label);
+    insertFollowupCard(label, text);
+    btn.textContent = '✓ ' + originalLabel;
+    btn.style.color = 'var(--accent)';
+    btn.style.borderColor = 'var(--accent)';
   } catch(e) {
-    btn.textContent = label;
+    btn.textContent = originalLabel;
     btn.disabled = false;
   }
+}
+
+async function doCustomFollowup() {
+  const input = document.getElementById('customFollowupInput');
+  const text = input.value.trim();
+  if (!text) { input.focus(); return; }
+  if (!lastAnalysis || !apiKey) return;
+
+  const btn = document.getElementById('customFollowupBtn');
+  const btnText = document.getElementById('customFollowupBtnText');
+  const spinner = document.getElementById('customFollowupSpinner');
+  btn.disabled = true;
+  btnText.textContent = 'Working through it...';
+  spinner.style.display = 'inline-block';
+
+  try {
+    const reply = await runFollowupCall(text);
+    insertFollowupCard(text, reply);
+    input.value = '';
+    input.style.height = 'auto';
+  } catch(e) {
+    alert('Error: ' + e.message);
+  }
+  btn.disabled = false;
+  btnText.textContent = 'Work through it';
+  spinner.style.display = 'none';
+}
+
+async function runFollowupCall(userTurn) {
+  // Build conversation: original analysis context, then any prior followup turns, then this one.
+  const messages = [
+    { role: 'user', content: `What I'm working through: "${lastAnalysis.input}"` },
+    { role: 'assistant', content: `${lastAnalysis.parsed.validation || ''}${lastAnalysis.parsed.reframe ? '\n\n' + lastAnalysis.parsed.reframe : ''}` }
+  ];
+  for (const t of (lastAnalysis.turns || [])) {
+    messages.push({ role: 'user', content: t.user });
+    messages.push({ role: 'assistant', content: t.assistant });
+  }
+  messages.push({ role: 'user', content: userTurn });
+
+  const systemPrompt = `You are Clearhead — warm CBT/DBT companion. The user is working through a thought, urge, or feeling. They just gave you a follow-up — either a question, a topic to explore, or just more of what's stuck.
+
+Tone: warm, direct, honest. Cut filler ("I hear you," "It sounds like," "What you're describing is"). Lead with substance.
+
+How to respond:
+1. If they asked a direct question → answer it with a CBT/DBT-grounded reframe, skill, or specific perspective. 2-3 sentences.
+2. If they named a topic or angle → dig into THAT specific thing. Don't rehash earlier points.
+3. If they're sharing more of what they can't let go → gently surface what's underneath. Name the fear, the belief, or the stuck point you're hearing. Don't just validate — help them see it more clearly.
+
+Then, when it would actually help them go deeper, end with ONE probing question. Good probing questions:
+- "What would it mean about you if this were true?"
+- "What's the part you can't let go of?"
+- "What are you afraid would happen if you stopped fighting this thought?"
+- "When did you first start believing this?"
+- "What would change for you if this stopped being true tomorrow?"
+- "Whose voice does this sound like?"
+
+Bad: generic check-ins like "Does that resonate?" or "How does that feel?"
+
+If they're winding down or you're repeating yourself, don't force a question. Leave space.
+
+Keep total response under 4 sentences unless they asked something that genuinely needs more. Never be preachy or therapist-voiced.`;
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+    body: JSON.stringify({ model: MODEL, max_tokens: 400, system: systemPrompt, messages })
+  });
+  if (!res.ok) { const err = await res.text(); throw new Error('API: ' + err.slice(0, 200)); }
+  const data = await res.json();
+  const text = data.content?.[0]?.text || '';
+  // Save turn for next call
+  if (!lastAnalysis.turns) lastAnalysis.turns = [];
+  lastAnalysis.turns.push({ user: userTurn, assistant: text });
+  return text;
+}
+
+function insertFollowupCard(label, text) {
+  const fuSection = document.getElementById('followupSection');
+  const newCard = document.createElement('div');
+  newCard.className = 'response-card';
+  // Truncate long labels (custom inputs) for the card header
+  const headerLabel = label.length > 60 ? label.slice(0, 57) + '...' : label;
+  newCard.innerHTML = `<div class="card-header"><span class="card-icon">💬</span><span class="card-label">${escapeHtml(headerLabel)}</span></div><div class="card-body" style="white-space:pre-wrap">${escapeHtml(text)}</div>`;
+  fuSection.parentNode.insertBefore(newCard, fuSection);
+  newCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function logSessionToJournal() {
@@ -1734,7 +1855,7 @@ Look for:
 - Intensity trends (climbing, falling, stable?)
 - Anything they might not see themselves
 
-Respond as 2-3 short paragraphs. Warm, observational, NOT preachy. Don't say "I notice" — just speak directly. End with one specific, actionable suggestion based on what you saw. Plain text only.`;
+Respond as 2 short paragraphs max. Lead with the most useful observation. Cut filler ("I notice," "It looks like"). End with ONE specific, actionable suggestion. Plain text only.`;
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -1762,6 +1883,7 @@ Respond as 2-3 short paragraphs. Warm, observational, NOT preachy. Don't say "I 
 
 // ============= GROUNDING / BREATHING =============
 let groundingTimer = null;
+let groundingTimer2 = null;
 let groundingActive = false;
 
 async function aiPickGrounding() {
@@ -1824,6 +1946,7 @@ function startGrounding(type, reason) {
 function closeGrounding() {
   groundingActive = false;
   if (groundingTimer) { clearTimeout(groundingTimer); clearInterval(groundingTimer); groundingTimer = null; }
+  if (groundingTimer2) { clearTimeout(groundingTimer2); groundingTimer2 = null; }
   document.getElementById('groundingModal').classList.remove('show');
   document.getElementById('groundingContent').innerHTML = '';
 }
@@ -1963,38 +2086,54 @@ function runSensesGrounding(reason) {
 
 function runUrgeSurfing(reason) {
   document.getElementById('groundingModalTitle').textContent = 'Urge Surfing';
-  document.getElementById('groundingModalSub').textContent = reason || 'The urge is a wave. It rises, peaks, and falls. You don\'t have to act on it.';
+  document.getElementById('groundingModalSub').textContent = reason || 'The urge is a wave. Don\'t fight it. Don\'t act on it. Just watch it move.';
   const content = document.getElementById('groundingContent');
   content.innerHTML = `
     <div class="breath-orb-wrap">
       <div class="breath-orb-ring"></div>
-      <div class="breath-orb" id="breathOrb" style="background:radial-gradient(circle at 30% 30%, var(--blue) 0%, #4a7a9a 80%)"></div>
+      <div class="breath-orb" id="breathOrb" style="background:radial-gradient(circle at 30% 30%, var(--accent) 0%, var(--accent2) 80%);transition:transform 8s ease-in-out;transform:scale(1)"></div>
     </div>
-    <div class="breath-instruction" id="breathInstruction">Notice the urge...</div>
-    <div class="breath-counter" id="breathCounter" style="text-align:center;max-width:340px">Don't fight it. Don't act on it. Just watch it move.</div>
+    <div class="breath-instruction" id="breathInstruction" style="transition:opacity 1.5s ease">Watch the wave</div>
+    <div class="breath-counter" id="breathCounter" style="text-align:center;max-width:340px;opacity:0.7">Stay with it. It will pass.</div>
     <button class="modal-btn modal-btn-secondary" onclick="closeGrounding()">Done</button>
   `;
-  // Wave animation
+
   const orb = document.getElementById('breathOrb');
   const instr = document.getElementById('breathInstruction');
-  const phases = [
-    { text: 'Notice the urge rising...', scale: 1.4, dur: 6 },
-    { text: 'Peak. It feels huge. That\'s normal.', scale: 1.7, dur: 4 },
-    { text: 'Now it starts to fall...', scale: 1.2, dur: 6 },
-    { text: 'Lower. Still here, but smaller.', scale: 1, dur: 5 },
-    { text: 'You rode it. It passed.', scale: 0.95, dur: 4 }
-  ];
-  let i = 0;
-  function step() {
-    if (!groundingActive || i >= phases.length) return;
-    const p = phases[i];
-    instr.textContent = p.text;
-    orb.style.transition = `transform ${p.dur}s ease-in-out`;
-    orb.style.transform = `scale(${p.scale})`;
-    i++;
-    groundingTimer = setTimeout(step, p.dur * 1000);
+
+  // Slow, calm wave — 8s up, 8s down, looping forever until Done.
+  let big = false;
+  function wave() {
+    if (!groundingActive) return;
+    big = !big;
+    orb.style.transform = `scale(${big ? 1.5 : 1})`;
+    groundingTimer = setTimeout(wave, 8000);
   }
-  setTimeout(step, 800);
+
+  // Gentle, infrequent text rotation. Crossfades every ~24s.
+  const lines = [
+    'Watch the wave',
+    'Notice without acting',
+    'It rises, it falls',
+    'You don\'t have to do anything',
+    'Stay with it',
+    'It will pass'
+  ];
+  let lineIdx = 0;
+  function rotateText() {
+    if (!groundingActive) return;
+    instr.style.opacity = '0';
+    setTimeout(() => {
+      if (!groundingActive) return;
+      lineIdx = (lineIdx + 1) % lines.length;
+      instr.textContent = lines[lineIdx];
+      instr.style.opacity = '1';
+    }, 1500);
+    groundingTimer2 = setTimeout(rotateText, 24000);
+  }
+
+  setTimeout(wave, 600);
+  setTimeout(rotateText, 24000);
 }
 
 function runTIPP(reason) {
@@ -2139,10 +2278,10 @@ EVIDENCE: ${d.evidence}
 
 Generate a balanced reframe and action step. Return ONLY valid JSON:
 {
-  "reframe": "A balanced, realistic alternative thought. NOT toxic positivity. Acknowledge what's real but pull back from the catastrophic edge. 2-3 sentences. Speak as if you're saying it FROM the user's perspective (first person 'I').",
-  "feeling_now": "Brief prediction of how feelings might shift after the reframe (e.g. 'anxious 80% → 50%')",
-  "action": "One specific, small, doable action they could take in the next hour. Concrete.",
-  "encouragement": "1 short warm sentence. Not preachy."
+  "reframe": "A balanced, realistic alternative thought. NOT toxic positivity. Acknowledge what's real but pull back from the catastrophic edge. 2 sentences max. First person ('I').",
+  "feeling_now": "Brief prediction of how feelings might shift (e.g. 'anxious 80% → 50%')",
+  "action": "One specific, small, doable action in the next hour. Concrete. Under 15 words.",
+  "encouragement": "ONE short sentence. Warm, not preachy. No filler openers."
 }`;
 
   try {
