@@ -991,9 +991,9 @@ textarea:focus {
   <div class="nav">
     <button class="nav-btn active" onclick="switchTab('work', this)">Work It Out</button>
     <button class="nav-btn" onclick="switchTab('challenge', this)">Challenge</button>
+    <button class="nav-btn" onclick="switchTab('gratitude', this)">Gratitude</button>
     <button class="nav-btn" onclick="switchTab('ground', this)">Ground</button>
     <button class="nav-btn" onclick="switchTab('journal', this)">Journal</button>
-    <button class="nav-btn" onclick="switchTab('gratitude', this)">Gratitude</button>
     <button class="nav-btn" onclick="switchTab('history', this)">History</button>
     <button class="nav-btn gear" onclick="switchTab('settings', this)">⚙</button>
   </div>
@@ -1191,7 +1191,7 @@ textarea:focus {
       <span id="patternBtnText">Get AI insight on my patterns</span>
     </button>
     <div id="patternInsight"></div>
-    <button class="action-btn" onclick="switchTab('journal', document.querySelectorAll('.nav-btn')[3])">← Back to journal</button>
+    <button class="action-btn" onclick="switchTab('journal', document.querySelectorAll('.nav-btn')[4])">← Back to journal</button>
   </div>
 
   <!-- =========== GRATITUDE TAB =========== -->
@@ -1718,7 +1718,7 @@ function insertFollowupCard(label, text) {
 
 function logSessionToJournal() {
   if (!lastAnalysis) return;
-  switchTab('journal', document.querySelectorAll('.nav-btn')[3]);
+  switchTab('journal', document.querySelectorAll('.nav-btn')[4]);
   document.getElementById('journalNote').value = lastAnalysis.input.slice(0, 200);
   // Auto-suggest tag based on mode
   const modeTagMap = { thought: 'ocd', anxiety: 'anxiety', emotion: null, negative: null, urge: 'ocd' };
@@ -1731,7 +1731,7 @@ function logSessionToJournal() {
 }
 
 function openGroundingMenu() {
-  switchTab('ground', document.querySelectorAll('.nav-btn')[2]);
+  switchTab('ground', document.querySelectorAll('.nav-btn')[3]);
 }
 
 function launchGroundingFromAnalysis() {
@@ -2536,7 +2536,7 @@ function restartTc() {
 }
 
 function logTcToJournal() {
-  switchTab('journal', document.querySelectorAll('.nav-btn')[3]);
+  switchTab('journal', document.querySelectorAll('.nav-btn')[4]);
   document.getElementById('journalNote').value = `Thought record: "${tcState.data.thought.slice(0, 120)}..."`;
 }
 </script>
