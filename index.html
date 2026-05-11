@@ -993,6 +993,7 @@ textarea:focus {
     <button class="nav-btn" onclick="switchTab('challenge', this)">Challenge</button>
     <button class="nav-btn" onclick="switchTab('ground', this)">Ground</button>
     <button class="nav-btn" onclick="switchTab('journal', this)">Journal</button>
+    <button class="nav-btn" onclick="switchTab('gratitude', this)">Gratitude</button>
     <button class="nav-btn" onclick="switchTab('history', this)">History</button>
     <button class="nav-btn gear" onclick="switchTab('settings', this)">⚙</button>
   </div>
@@ -1193,6 +1194,25 @@ textarea:focus {
     <button class="action-btn" onclick="switchTab('journal', document.querySelectorAll('.nav-btn')[3])">← Back to journal</button>
   </div>
 
+  <!-- =========== GRATITUDE TAB =========== -->
+  <div class="tab" id="tab-gratitude">
+    <div class="tab-hint">Three things you're grateful for.</div>
+    <textarea id="gratitudeInput1" placeholder="One thing you're grateful for…" style="min-height:70px" oninput="autoExpand(this)"></textarea>
+    <textarea id="gratitudeInput2" placeholder="Another thing you're grateful for…" style="min-height:70px" oninput="autoExpand(this)"></textarea>
+    <textarea id="gratitudeInput3" placeholder="One more thing you're grateful for…" style="min-height:70px" oninput="autoExpand(this)"></textarea>
+
+    <button class="main-btn" onclick="saveGratitudeEntry()">
+      <span>Save gratitude</span>
+    </button>
+
+    <div class="divider" style="margin-top:8px"></div>
+
+    <div class="section-header">Recent gratitude</div>
+    <div id="gratitudeEntries" class="history-list">
+      <div class="empty-state">No entries yet. Naming what you're grateful for helps shift attention toward what's good.</div>
+    </div>
+  </div>
+
   <!-- =========== HISTORY TAB =========== -->
   <div class="tab" id="tab-history">
     <div class="section-header">Past sessions</div>
@@ -1344,6 +1364,7 @@ let mode = 'thought';
 let apiKey = '';
 let sessionHistory = [];
 let journalEntries = [];
+let gratitudeEntries = [];
 let lastAnalysis = null;
 let currentMood = null;
 let currentTags = [];
@@ -1355,6 +1376,7 @@ try {
   apiKey = localStorage.getItem('clearhead_api') || '';
   sessionHistory = JSON.parse(localStorage.getItem('clearhead_history') || '[]');
   journalEntries = JSON.parse(localStorage.getItem('clearhead_journal') || '[]');
+  gratitudeEntries = JSON.parse(localStorage.getItem('clearhead_gratitude') || '[]');
 } catch(e) {}
 
 function loadApiKey() { document.getElementById('apiKeyInput').value = apiKey; }
@@ -1376,10 +1398,11 @@ function clearAllData() {
   try {
     localStorage.removeItem('clearhead_history');
     localStorage.removeItem('clearhead_journal');
+    localStorage.removeItem('clearhead_gratitude');
     localStorage.removeItem('clearhead_api');
   } catch(e) {}
-  sessionHistory = []; journalEntries = []; apiKey = '';
-  loadApiKey(); renderJournalEntries(); renderHistory();
+  sessionHistory = []; journalEntries = []; gratitudeEntries = []; apiKey = '';
+  loadApiKey(); renderJournalEntries(); renderGratitudeEntries(); renderHistory();
   closeAllOverflows();
   alert('All cleared.');
 }
@@ -1392,6 +1415,7 @@ function switchTab(name, btn) {
   if (btn) btn.classList.add('active');
   if (name === 'history') renderHistory();
   if (name === 'journal') renderJournalEntries();
+  if (name === 'gratitude') renderGratitudeEntries();
   if (name === 'patterns') renderPatterns();
   if (name === 'settings') loadApiKey();
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1868,6 +1892,55 @@ function renderJournalEntries() {
         </div>
         ${e.note ? `<div class="journal-note">${escapeHtml(e.note)}</div>` : ''}
         ${e.tags && e.tags.length ? `<div class="journal-tags">${e.tags.map(t => `<span class="journal-tag">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+// ============= GRATITUDE =============
+function saveGratitudeEntry() {
+  const ids = ['gratitudeInput1', 'gratitudeInput2', 'gratitudeInput3'];
+  const items = ids.map(id => document.getElementById(id).value.trim()).filter(Boolean);
+  if (items.length < 3) {
+    alert('Name three things you’re grateful for.');
+    return;
+  }
+  gratitudeEntries.unshift({ items, ts: Date.now() });
+  if (gratitudeEntries.length > 500) gratitudeEntries = gratitudeEntries.slice(0, 500);
+  try { localStorage.setItem('clearhead_gratitude', JSON.stringify(gratitudeEntries)); } catch(e) {}
+
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    el.value = '';
+    el.style.height = 'auto';
+  });
+
+  renderGratitudeEntries();
+
+  const btn = document.querySelector('#tab-gratitude .main-btn');
+  const orig = btn.innerHTML;
+  btn.innerHTML = '<span>Saved ✓</span>';
+  btn.style.background = 'var(--green)';
+  btn.style.color = '#0f0f11';
+  setTimeout(() => { btn.innerHTML = orig; btn.style.background = ''; btn.style.color = ''; }, 1400);
+}
+
+function renderGratitudeEntries() {
+  const list = document.getElementById('gratitudeEntries');
+  if (!list) return;
+  if (!gratitudeEntries.length) {
+    list.innerHTML = '<div class="empty-state">No entries yet. Naming what you’re grateful for helps shift attention toward what’s good.</div>';
+    return;
+  }
+  list.innerHTML = gratitudeEntries.slice(0, 20).map(e => `
+    <div class="journal-entry">
+      <div class="journal-emoji">🙏</div>
+      <div class="journal-body">
+        <div class="journal-top">
+          <span class="journal-time">${timeAgo(e.ts)}</span>
+        </div>
+        <ol style="margin:0 0 0 18px;padding:0;font-size:0.85rem;color:var(--text);line-height:1.55">
+          ${e.items.map(i => `<li style="margin-bottom:2px">${escapeHtml(i)}</li>`).join('')}
+        </ol>
       </div>
     </div>`).join('');
 }
